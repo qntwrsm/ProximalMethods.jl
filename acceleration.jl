@@ -10,59 +10,51 @@ acceleration.jl
 =#
 
 """
-    extrapolation(k, ∇f_x, Δx)
-
-Calculate simple extrapolation parameter with gradient based adaptive restart.
+    update_acc!(acc, state)
+  
+Update the extrapolation parameter `ω` using a specific acceleration scheme,
+such as simple extrapolation and Nesterov momentum.
 
 #### Arguments
-  - `k::Integer`            : iteration counter
-  - `∇f_x::AbstractVector`  : gradient of ``f(x)`` at ``x`` (n x 1)
-  - `Δx::AbstractVector`    : difference (n x 1)
-
-#### Returns
-  - `ω::Real`   : extrapolation parameter
+  - `acc::AbstractAccelScheme`	: acceleration scheme variables
+  - `state::ProxGradState`		: state variables
 """
-function extrapolation(k::Integer, ∇f_x::AbstractVector, Δx::AbstractVector)
-    # Gradient based adaptive restart
-    k= dot(∇f_x, Δx) > zero(eltype(Δx)) ? 1 : k
+function update_acc! end
 
-    # Simple extrapolation
-    ω= (k - 1)*inv(k + 2)
+function update_acc!(acc::NoAccel, state::ProxGradState)
+	# Do nothing... 
 
-    return ω
+	return nothing
 end
 
-"""
-    nesterov(θ_k, λ, λ_k, ∇f_x, Δx, m=.0)
+function update_acc!(acc::Simple, state::ProxGradState)
+	# Gradient based adaptive restart
+    acc.k= dot(state.∇f, state.Δ) > zero(eltype(state.Δ)) ? 1 : acc.k
 
-Calculate Nesterov extrapolation parameter with gradient based adaptive restart.
+    # Simple extrapolation
+    acc.ω= (acc.k - 1)*inv(acc.k + 2)
 
-#### Arguments
-  - `θ_k::Real`             : current momentum parameter
-  - `λ::Real`               : current stepsize
-  - `λ_k::Real`             : previous stepsize
-  - `∇f_x::AbstractVector`  : gradient of ``f(x)`` at ``x`` (n x 1)
-  - `Δx::AbstractVector`    : difference (n x 1)
-  - `m::Real`               : convexity parameter
+	return nothing
+end
 
-#### Returns
-  - `β::Real`   : extrapolation parameter
-  - `θ::Real`   : updated momentum parameter
-"""
-function nesterov(θ_k::Real, λ::Real, λ_k::Real, ∇f_x::AbstractVector, 
-                    Δx::AbstractVector, m::Real=.0)
-    # Gradient based adaptive restart
-    θ_k= dot(∇f_x, Δx) > zero(eltype(Δx)) ? one(θ_k) : θ_k
+function update_acc!(acc::Nesterov, state::ProxGradState)
+	# Gradient based adaptive restart
+    acc.θ= dot(state.∇f, state.Δ) > zero(eltype(state.Δ)) ? one(acc.θ) : acc.θ
+
+	# Clean up notation
+	λ_prev= acc.ls.λ_prev
+	λ= acc.ls.λ
+	θ_prev= acc.θ
 
     # Quadratic formula
-    b = θ_k^2 * inv(λ_k) - m
-    D= b^2 + 4 * inv(λ_k * λ) * θ_k^2
+    b = θ_prev^2 * inv(λ_prev) - acc.m
+    D= b^2 + 4 * inv(λ_prev * λ) * θ_prev^2
 
-    # Update θ
-    θ= .5 * λ * (-b + sqrt(D))
+    # Update Nesterov momentum
+    acc.θ= .5 * λ * (-b + sqrt(D))
 
-    # Update β
-    β= λ * θ_k * (one(θ_k) - θ_k) * inv(λ_k * θ + λ * θ_k^2)
+    # Nesterov extrapolation
+    acc.ω= λ * θ_prev * (one(θ_prev) - θ_prev) * inv(λ_prev * acc.θ + λ * θ_prev^2)
 
-    return (β, θ)
+	return nothing
 end
