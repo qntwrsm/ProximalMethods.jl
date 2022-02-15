@@ -58,11 +58,11 @@ Base.@kwdef mutable struct Nesterov{Tf, G} <: AbstractAccelScheme
 end
 
 # Proximal Gradient Methods
-struct ProxGradState{Tv, Gv}
+struct ProxGradState{Tv}
 	x::Tv		# current state
-	x_prev::Gv	# previous state
+	x_prev::Tv	# previous state
 	y::Tv		# extrapolated state
-	Δ::Tv		# change in states
+	Δ::Tv		# change in state
 	∇f::Tv		# gradient of f
 end
 

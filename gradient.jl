@@ -11,7 +11,7 @@ gradient.jl
 =#
 
 """
-    update_state!(state, λ, prox!, args)
+    update_state!(state, λ, prox!)
 
 Update state using proximal gradient step with step size `λ`, storing the result
 in `x`.
@@ -20,18 +20,17 @@ in `x`.
   - `state::ProxGradState`  : state variables
   - `λ::Real`               : stepsize
   - `prox!::Function`       : proximal operator of ``g(x)``
-  - `args::NamedTuple`      : optional arguments for `f` and `prox!`
 """
-function update_state!(state::ProxGradState, λ::Real, prox!::Function, args::NamedTuple)
+function update_state!(state::ProxGradState, λ::Real, prox!::Function)
     # Proximal gradient step
     @. state.x= state.y - λ*state.∇f
-    prox!(state.x, λ, args.prox...)
+    prox!(state.x, λ)
 
     return nothing
 end
 
 """
-    backtrack!(ls, state, f, prox!, args; ϵ=1e-7)
+    backtrack!(ls, state, f, prox!; ϵ=1e-7)
 
 Backtracking line search to find the optimal step size `λ`.
 
@@ -41,25 +40,24 @@ Backtracking line search to find the optimal step size `λ`.
   - `λ::Real`               : initial stepsize
   - `f::Function`           : objective function
   - `prox!::Function`       : proximal operator of ``g(x)``
-  - `args::NamedTuple`      : optional arguments for `f` and `prox!`
   - `ϵ::Real`               : tolerance
 """
-function backtrack!(ls::BackTrack, state::ProxGradState, f::Function, prox!::Function, 
-                    args::NamedTuple; ϵ::Real=1e-7)
+function backtrack!(ls::BackTrack, state::ProxGradState, f::Function, 
+                    prox!::Function; ϵ::Real=1e-7)
     # Store previous stepsize
     ls.λ_prev= ls.λ
     
     # Objective function value, f(y)
-    f_y= f(state.y, args.f...)
+    f_y= f(state.y)
 
     # Minimal stepsize
     λ_min= ϵ*inv(minimum(abs, state.∇f))
 
     # Update state
-    update_state!(state, ls.λ, prox!, args)
+    update_state!(state, ls.λ, prox!)
 
     # Objective function value, f(x)
-    f_x= f(state.x, args.f...)
+    f_x= f(state.x)
 
     # f̂
     @. state.Δ= state.x - state.y
@@ -71,10 +69,10 @@ function backtrack!(ls::BackTrack, state::ProxGradState, f::Function, prox!::Fun
         ls.λ*= ls.β
 
         # Update state
-        update_state!(state, ls.λ, prox!, args)
+        update_state!(state, ls.λ, prox!)
 
         # Objective function value
-        f_x= f(state.x, args.f...)
+        f_x= f(state.x)
 
         # Update f̂
         @. state.Δ= state.x - state.y
@@ -85,7 +83,7 @@ function backtrack!(ls::BackTrack, state::ProxGradState, f::Function, prox!::Fun
 end
 
 """
-    prox_grad(x0, f, ∇f!, prox!, args, style="none"; β=.5, ϵ_abs=1e-7, ϵ_rel=1e-3, max_iter=1000)
+    prox_grad(x0, f, ∇f!, prox!; style="none", β=.5, ϵ_abs=1e-7, ϵ_rel=1e-3, max_iter=1000)
 
 Minimize an objective function ``f(x) + g(x)``, where ``f(x)`` is differentibale
 while ``g(x)`` is not, using the proximal gradient method.
@@ -95,7 +93,6 @@ while ``g(x)`` is not, using the proximal gradient method.
   - `f::Function`           : ``f(x)``
   - `∇f!::Function`         : gradient of `f`
   - `prox!::Function`       : proximal operator of ``g(x)``
-  - `args::NamedTuple`      : arguments for `f`, `∇f!`, and `prox!`
   - `style::AbstractString` : acceleration style
   - `β::Real`               : line search parameter
   - `ϵ_abs::Real`           : absolute tolerance
@@ -105,9 +102,9 @@ while ``g(x)`` is not, using the proximal gradient method.
 #### Returns
   - `x::AbstractVector` : minimizer (optimal parameter values) (n x 1)
 """
-function prox_grad(x0::AbstractVector, f::Function, ∇f!::Function, prox!::Function, 
-                    args::NamedTuple, style::AbstractString="none"; β::Real=.5, 
-                    ϵ_abs::Real=1e-7, ϵ_rel::Real=1e-3, max_iter::Integer=1000)
+function prox_grad(x0::AbstractVector, f::Function, ∇f!::Function, prox!::Function; 
+                    style::AbstractString="none", β::Real=.5, ϵ_abs::Real=1e-7, 
+                    ϵ_rel::Real=1e-3, max_iter::Integer=1000)
     # Initialize state and line search
     state= ProxGradState(copy(x0), similar(x0), similar(x0), similar(x0), similar(x0))
     ls= BackTrack(one(Float64), one(Float64), β)
@@ -136,10 +133,10 @@ function prox_grad(x0::AbstractVector, f::Function, ∇f!::Function, prox!::Func
         @. state.y= state.x + acc.ω * state.Δ
 
         # Current gradient
-        ∇f!(state.∇f, state.y, args.∇f...)
+        ∇f!(state.∇f, state.y)
 
         # Backtracking linesearch
-        backtrack!(ls, state, f, prox!, args, ϵ=ϵ_abs)
+        backtrack!(ls, state, f, prox!, ϵ=ϵ_abs)
 
         # Store change in state
         @. state.Δ= state.x - state.x_prev
@@ -157,15 +154,15 @@ function prox_grad(x0::AbstractVector, f::Function, ∇f!::Function, prox!::Func
 end
 
 """
-    prox_grad!(x, f, ∇f!, prox!, args; β=.5, ϵ_abs=1e-7, ϵ_rel=1e-3, max_iter=1000)
+    prox_grad!(x, f, ∇f!, prox!; style="none", β=.5, ϵ_abs=1e-7, ϵ_rel=1e-3, max_iter=1000)
 
 Minimize an objective function ``f(x) + g(x)``, where ``f(x)`` is differentibale
 while ``g(x)`` is not, using the proximal gradient method. Storing the result in
 `x`. See also `prox_grad`.
 """
-function prox_grad!(x::AbstractVector, f::Function, ∇f!::Function, prox!::Function, 
-                    args::NamedTuple, style::AbstractString="none"; β::Real=.5, 
-                    ϵ_abs::Real=1e-7, ϵ_rel::Real=1e-3, max_iter::Integer=1000)
+function prox_grad!(x::AbstractVector, f::Function, ∇f!::Function, prox!::Function; 
+                    style::AbstractString="none", β::Real=.5, ϵ_abs::Real=1e-7, 
+                    ϵ_rel::Real=1e-3, max_iter::Integer=1000)
     # Initialize state and line search
     state= ProxGradState(x, similar(x), similar(x), similar(x), similar(x))
     ls= BackTrack(one(Float64), one(Float64), β)
@@ -194,10 +191,10 @@ function prox_grad!(x::AbstractVector, f::Function, ∇f!::Function, prox!::Func
         @. state.y= state.x + acc.ω * state.Δ
 
         # Current gradient
-        ∇f!(state.∇f, state.y, args.∇f...)
+        ∇f!(state.∇f, state.y)
 
         # Backtracking linesearch
-        backtrack!(ls, state, f, prox!, args, ϵ=ϵ_abs)
+        backtrack!(ls, state, f, prox!, ϵ=ϵ_abs)
 
         # Store change in state
         @. state.Δ= state.x - state.x_prev

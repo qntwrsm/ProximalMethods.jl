@@ -11,7 +11,7 @@ admm.jl
 =#
 
 """
-    update_state!(state, λ, prox_f!, prox_g!, args)
+    update_state!(state, λ, prox_f!, prox_g!)
 
 Update states using proximal updates with scale `λ`, storing the result
 in `x`, `z`, and `u`.
@@ -21,20 +21,18 @@ in `x`, `z`, and `u`.
   - `λ::Real`           : proximal scaling parameter
   - `prox_f!::Function` : proximal operator of ``f(x)``
   - `prox_g!::Function` : proximal operator of ``g(x)``
-  - `args::NamedTuple`  : arguments for `prox_f!` and `prox_g!`
 """
-function update_state!(state::ADMMState, λ::Real, prox_f!::Function, 
-                        prox_g!::Function, args::NamedTuple)
+function update_state!(state::ADMMState, λ::Real, prox_f!::Function, prox_g!::Function)
     # Proximal update x
     @. state.x= state.z - state.u
-    prox_f!(state.x, λ, args.prox_f...)
+    prox_f!(state.x, λ)
 
     # Store previous z
     copyto!(state.z_prev, state.z)
 
     # Proximal update z
     @. state.z= state.x + state.u
-    prox_g!(state. z, λ, args.prox_g...)
+    prox_g!(state.z, λ)
 
     # Update u
     @. state.u= state.u + state.x - state.z
@@ -43,7 +41,7 @@ function update_state!(state::ADMMState, λ::Real, prox_f!::Function,
 end
 
 """
-    admm(x0, prox_f!, prox_g!, args, λ=1., ϵ_abs=1e-7, ϵ_rel=1e-4, max_iter=1000)
+    admm(x0, prox_f!, prox_g!; λ=1., ϵ_abs=1e-7, ϵ_rel=1e-4, max_iter=1000)
 
 Minimize an objective function ``f(x) + g(x)``, where ``f(x)`` and ``g(x)`` can
 both be nonsmooth, using alternating direction method of multipliers, also known
@@ -53,7 +51,6 @@ as Douglas-Rachford splitting.
   - `x0::AbstractVector`: initial parameter values (n x 1)
   - `prox_f!::Function` : proximal operator of ``f(x)``
   - `prox_g!::Function` : proximal operator of ``g(x)``
-  - `args::NamedTuple`  : arguments for `prox_f!` and `prox_g!`
   - `λ::Real`           : proximal scaling parameter
   - `ϵ_abs::Real`       : absolute tolerance
   - `ϵ_rel::Real`       : relative tolerance
@@ -63,8 +60,8 @@ as Douglas-Rachford splitting.
   - `x::AbstractVector` : minimizer ``∈ dom f`` (n x 1)
   - `z::AbstractVector` : minimizer ``∈ dom g`` (n x 1)
 """
-function admm(x0::AbstractVector, prox_f!::Function, prox_g!::Function, 
-                args::NamedTuple, λ::Real=1., ϵ_abs::Real=1e-7, ϵ_rel::Real=1e-4, 
+function admm(x0::AbstractVector, prox_f!::Function, prox_g!::Function; 
+                λ::Real=1., ϵ_abs::Real=1e-7, ϵ_rel::Real=1e-4, 
                 max_iter::Integer=1000)
     # Dimensions
     n= length(x0)
@@ -81,7 +78,7 @@ function admm(x0::AbstractVector, prox_f!::Function, prox_g!::Function,
     # ADMM
     while ℓ₂_pri > ϵ_pri && ℓ₂_dual > ϵ_dual && iter < max_iter
         # Update states
-        update_state!(state, λ, prox_f!, prox_g!, args)
+        update_state!(state, λ, prox_f!, prox_g!)
 
         # Primal residual
         @. state.r= state.x + state.z
@@ -103,15 +100,14 @@ function admm(x0::AbstractVector, prox_f!::Function, prox_g!::Function,
 end
 
 """
-    admm!(x, prox_f!, prox_g!, args, λ=1., ϵ_abs=1e-7, ϵ_rel=1e-4, max_iter=1000)
+    admm!(x, prox_f!, prox_g!; λ=1., ϵ_abs=1e-7, ϵ_rel=1e-4, max_iter=1000)
 
 Minimize an objective function ``f(x) + g(x)``, where ``f(x)`` and ``g(x)`` can
 both be nonsmooth, using alternating direction method of multipliers, also known
 as Douglas-Rachford splitting, overwriting `x`. See also `admm`.
 """
-function admm!(x::AbstractVector, prox_f!::Function, prox_g!::Function, 
-                args::NamedTuple, λ::Real=1., ϵ_abs::Real=1e-7, ϵ_rel::Real=1e-4, 
-                max_iter::Integer=1000)
+function admm!(x::AbstractVector, prox_f!::Function, prox_g!::Function; 
+                λ::Real=1., ϵ_abs::Real=1e-7, ϵ_rel::Real=1e-4, max_iter::Integer=1000)
     # Dimensions
     n= length(x)
     
@@ -127,7 +123,7 @@ function admm!(x::AbstractVector, prox_f!::Function, prox_g!::Function,
     # ADMM
     while ℓ₂_pri > ϵ_pri && ℓ₂_dual > ϵ_dual && iter < max_iter
         # Update states
-        update_state!(state, λ, prox_f!, prox_g!, args)
+        update_state!(state, λ, prox_f!, prox_g!)
 
         # Primal residual
         @. state.r= state.x + state.z
