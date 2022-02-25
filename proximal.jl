@@ -44,7 +44,7 @@ proximal operator of the ``ℓ₂``-norm.
 """
 function block_soft_thresh(x::AbstractVector, λ::Real)
 	# Scaling
-	τ= max(one(λ) - λ*inv(sqrt(dot(x,x))), zero(λ))
+	τ= max(one(λ) - λ*inv(norm(x)), zero(λ))
 
 	# Block soft thresholding
 	y= τ*x
@@ -61,7 +61,7 @@ proximal operator of the ``ℓ₂``-norm, storing the results in `y`. See also
 """
 function block_soft_thresh!(y::AbstractVector, x::AbstractVector, λ::Real)
 	# Scaling
-	τ= max(one(λ) - λ*inv(sqrt(dot(x,x))), zero(λ))
+	τ= max(one(λ) - λ*inv(norm(x)), zero(λ))
 
 	# Block soft thresholding
 	@. y= τ*x
@@ -78,7 +78,7 @@ proximal operator of the ``ℓ₂``-norm, overwriting `x`. See also
 """
 function block_soft_thresh!(x::AbstractVector, λ::Real)
 	# Scaling
-	τ= max(one(λ) - λ*inv(sqrt(dot(x,x))), zero(λ))
+	τ= max(one(λ) - λ*inv(nomr(x)), zero(λ))
 
 	# Block soft thresholding
 	@. x= τ*x
