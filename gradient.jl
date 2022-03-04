@@ -51,7 +51,7 @@ function backtrack!(ls::BackTrack, state::ProxGradState, f::Function,
     f_y= f(state.y)
 
     # Minimal stepsize
-    λ_min= ϵ*inv(minimum(abs, state.∇f))
+    λ_min= ϵ*maximum(abs, state.∇f)
 
     # Update state
     update_state!(state, ls.λ, prox!)

@@ -43,8 +43,9 @@ proximal operator of the ``ℓ₂``-norm.
   - `y::AbstractVector`	: block soft thresholded value (n x 1)
 """
 function block_soft_thresh(x::AbstractVector, λ::Real)
+	T= eltype(x)
 	# Scaling
-	τ= max(one(λ) - λ*inv(norm(x)), zero(λ))
+	τ= max(one(λ) - λ*inv(norm(x) + eps(T)), zero(λ))
 
 	# Block soft thresholding
 	y= τ*x
@@ -60,8 +61,9 @@ proximal operator of the ``ℓ₂``-norm, storing the results in `y`. See also
 `block_soft_thresh`.
 """
 function block_soft_thresh!(y::AbstractVector, x::AbstractVector, λ::Real)
+	T= eltype(x)
 	# Scaling
-	τ= max(one(λ) - λ*inv(norm(x)), zero(λ))
+	τ= max(one(λ) - λ*inv(norm(x) + eps(T)), zero(λ))
 
 	# Block soft thresholding
 	@. y= τ*x
@@ -77,8 +79,9 @@ proximal operator of the ``ℓ₂``-norm, overwriting `x`. See also
 `block_soft_thresh`.
 """
 function block_soft_thresh!(x::AbstractVector, λ::Real)
+	T= eltype(x)
 	# Scaling
-	τ= max(one(λ) - λ*inv(nomr(x)), zero(λ))
+	τ= max(one(λ) - λ*inv(norm(x) + eps(T)), zero(λ))
 
 	# Block soft thresholding
 	@. x= τ*x
