@@ -23,7 +23,7 @@ in `x`.
 """
 function update_state!(state::ProxGradState, λ::Real, prox!::Function)
     # Proximal gradient step
-    @. state.x= state.y - λ*state.∇f
+    state.x.= state.y .- λ .* state.∇f
     prox!(state.x, λ)
 
     return nothing
@@ -51,7 +51,7 @@ function backtrack!(ls::BackTrack, state::ProxGradState, f::Function,
     f_y= f(state.y)
 
     # Minimal stepsize
-    λ_min= ϵ*maximum(abs, state.∇f)
+    λ_min= ϵ * maximum(abs, state.∇f)
 
     # Update state
     update_state!(state, ls.λ, prox!)
@@ -60,11 +60,14 @@ function backtrack!(ls::BackTrack, state::ProxGradState, f::Function,
     f_x= f(state.x)
 
     # f̂
-    @. state.Δ= state.x - state.y
+    state.Δ.= state.x .- state.y
     f_hat= f_y + dot(state.∇f, state.Δ) + inv(ls.λ+ls.λ)*norm(state.Δ)^2
 
+    # tolerance
+    tol= 10 * eps(f_x) * (one(f_x) + abs(f_x))
+
     # Backtracking line search
-    while f_x > f_hat && ls.λ > λ_min
+    while f_x > f_hat + tol && ls.λ > λ_min
         # Update stepsize
         ls.λ*= ls.β
 
@@ -75,8 +78,11 @@ function backtrack!(ls::BackTrack, state::ProxGradState, f::Function,
         f_x= f(state.x)
 
         # Update f̂
-        @. state.Δ= state.x - state.y
+        state.Δ.= state.x .- state.y
         f_hat= f_y + dot(state.∇f, state.Δ) + inv(ls.λ+ls.λ)*norm(state.Δ)^2
+
+        # Update tolerance
+        tol= 10 * eps(f_x) * (one(f_x) + abs(f_x))
     end
 
     return nothing
@@ -130,7 +136,7 @@ function prox_grad(x0::AbstractVector, f::Function, ∇f!::Function, prox!::Func
 
         # Extrapolation
         update_acc!(acc, state)
-        @. state.y= state.x + acc.ω * state.Δ
+        state.y.= state.x .+ acc.ω .* state.Δ
 
         # Current gradient
         ∇f!(state.∇f, state.y)
@@ -139,7 +145,7 @@ function prox_grad(x0::AbstractVector, f::Function, ∇f!::Function, prox!::Func
         backtrack!(ls, state, f, prox!, ϵ=ϵ_abs)
 
         # Store change in state
-        @. state.Δ= state.x - state.x_prev
+        state.Δ.= state.x .- state.x_prev
 
         # Absolute change
         abs_change= maximum(abs, state.Δ)
@@ -188,7 +194,7 @@ function prox_grad!(x::AbstractVector, f::Function, ∇f!::Function, prox!::Func
 
         # Extrapolation
         update_acc!(acc, state)
-        @. state.y= state.x + acc.ω * state.Δ
+        state.y.= state.x .+ acc.ω .* state.Δ
 
         # Current gradient
         ∇f!(state.∇f, state.y)
@@ -197,7 +203,7 @@ function prox_grad!(x::AbstractVector, f::Function, ∇f!::Function, prox!::Func
         backtrack!(ls, state, f, prox!, ϵ=ϵ_abs)
 
         # Store change in state
-        @. state.Δ= state.x - state.x_prev
+        state.Δ.= state.x .- state.x_prev
 
         # Absolute change
         abs_change= maximum(abs, state.Δ)
