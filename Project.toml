@@ -1,0 +1,13 @@
+name = "ProximalMethods"
+uuid = "4206358c-74de-4262-b9b2-8440947a766f"
+authors = ["Quint Wiersma <qnt.wrsm@gmail.com> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1.7"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
