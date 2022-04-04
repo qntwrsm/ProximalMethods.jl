@@ -20,9 +20,6 @@ export
 	soft_thresh,
 	block_soft_thresh, block_soft_thresh!,
 	shrinkage,
-# Acceleration Methods 
-	extrapolation,
-	nesterov,
 # Proximal Gradient Methods
 	prox_grad, prox_grad!, 
 # ADMM

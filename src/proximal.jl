@@ -43,12 +43,8 @@ proximal operator of the ``ℓ₂``-norm.
   - `y::AbstractVector`	: block soft thresholded value (n x 1)
 """
 function block_soft_thresh(x::AbstractVector, λ::Real)
-	T= eltype(x)
-	# Scaling
-	τ= max(one(λ) - λ*inv(norm(x) + eps(T)), zero(λ))
-
-	# Block soft thresholding
-	y= τ*x
+    y= similar(x)
+	block_soft_thresh!(y, x, λ)
 
 	return y
 end
@@ -110,4 +106,89 @@ function shrinkage(x::Real, λ::Real)
 	y= τ*x
 
 	return y
+end
+
+"""
+    shrinkage!(x, λ, fac, b)
+
+Compute the generalized shrinkage operator with scaling parameter `λ` at `x`,
+proximal operator of a quadratic function with quadratic parameters `A` and
+linear parameters `b` using a factorization `fac` of ``I + λA``, overwriting
+`x`. See also `shrinkage`.
+"""
+function shrinkage!(x::AbstractVector, λ::Real, fac::Factorization, b::AbstractVector)
+    # x - λb
+    x.-= λ .* b 
+    # (I + λA)⁻¹(x - λb)
+    ldiv!(fac, x)
+
+    return nothing
+end
+
+"""
+    shrinkage(x, λ, fac, b)
+
+Compute the generalized shrinkage operator with scaling parameter `λ` at `x`,
+proximal operator of a quadratic function with quadratic parameters `A` and
+linear parameters `b` using a factorization `fac` of ``I + λA``.
+
+#### Arguments
+  - `x::AbstractVector` : input
+  - `λ::Real`           : scaling parameter
+  - `fac::Factorization`: factorization of ``I + λA`` 
+  - `b::AbstractVector` : linear coefficients
+
+#### Returns
+  - `y::AbstractVector` : shrunken values
+"""
+function shrinkage(x::AbstractVector, λ::Real, fac::Factorization, b::AbstractVector)
+    y= similar(x)
+    shrinkage!(y, λ, fac, b)
+
+    return y
+end
+
+"""
+    shrinkage!(x, λ, A, b)
+
+Compute the generalized shrinkage operator with scaling parameter `λ` at `x`,
+proximal operator of a quadratic function with quadratic parameters `A` and
+linear parameters `b`, overwriting `x`. See also `shrinkage`.
+"""
+function shrinkage!(x::AbstractVector, λ::Real, A::AbstractMatrix, b::AbstractVector)
+    # scaling I + λA
+    S= λ .* A
+    @inbounds @fastmath for i in axes(A,1)
+        S[i,i]+= one(eltype(A))
+    end
+
+    # factorization
+    C= cholesky!(Hermitian(S))
+
+    shrinkage!(x, λ, C, b)
+
+    return nothing
+end
+
+"""
+    shrinkage(x, λ, A, b)
+
+Compute the generalized shrinkage operator with scaling parameter `λ` at `x`,
+proximal operator of a quadratic function with quadratic parameters `A` and
+linear parameters `b`.
+
+#### Arguments
+  - `x::AbstractVector` : input
+  - `λ::Real`           : scaling parameter
+  - `A::AbstractMatrix` : quadratic coefficients
+  - `b::AbstractVector` : linear coefficients
+
+#### Returns
+  - `y::AbstractVector` : shrunken values
+"""
+function shrinkage(x::AbstractVector, λ::Real, A::AbstractMatrix, b::AbstractVector)
+    y= similar(x)
+    shrinkage!(y, λ, A, b)
+
+    return y
 end
