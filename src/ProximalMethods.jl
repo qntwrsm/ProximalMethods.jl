@@ -19,7 +19,8 @@ export
 # Proximal Operators
 	soft_thresh,
 	block_soft_thresh, block_soft_thresh!,
-	shrinkage,
+	shrinkage, shrinkage!,
+    smooth!,
 # Proximal Gradient Methods
 	prox_grad, prox_grad!, 
 # ADMM
