@@ -13,7 +13,8 @@ ProximalMethods.jl
 
 module ProximalMethods
 
-using LinearAlgebra, Optim
+using   LinearAlgebra, 
+        Optim
 
 export 
 # Proximal Operators

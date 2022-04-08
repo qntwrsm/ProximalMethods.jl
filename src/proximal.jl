@@ -193,7 +193,7 @@ function shrinkage(x::AbstractVector, λ::Real, A::AbstractMatrix, b::AbstractVe
     return y
 end
 
-function smooth!(x::AbstractVector, λ::Real, f::Function, ∇f!::Function)
+function smooth!(x::AbstractVector, λ::Real, f::Function, ∇f!::Function, x0::AbstractVector)
     # adjust objective function and gradient
     # f(y) + (1/2λ)‖y - x‖₂² 
     g(y::AbstractVector)= f(y) + inv(λ + λ) * ( sum(abs2, y) + sum(abs2, x) - 2 * dot(y, x) )
@@ -206,8 +206,10 @@ function smooth!(x::AbstractVector, λ::Real, f::Function, ∇f!::Function)
                                                 end
     
     # solve using L-BFGS
-    res= optimize(g, ∇g!, x, LBFGS())
+    res= optimize(g, ∇g!, x0, LBFGS(), Optim.Options(g_tol = 1e-4))
     x.= Optim.minimizer(res)
+    # store current estimate to warm start next iteration
+    x0.= x
 
     return nothing
 end
