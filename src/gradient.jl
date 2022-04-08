@@ -89,7 +89,7 @@ function backtrack!(ls::BackTrack, state::ProxGradState, f::Function,
 end
 
 """
-    prox_grad(x0, f, ∇f!, prox!; style="none", β=.5, ϵ_abs=1e-7, ϵ_rel=1e-3, max_iter=1000)
+    prox_grad(x0, f, ∇f!, prox!; style="none", β=.5, ϵ=1e-7, max_iter=1000)
 
 Minimize an objective function ``f(x) + g(x)``, where ``f(x)`` is differentibale
 while ``g(x)`` is not, using the proximal gradient method.
@@ -101,76 +101,17 @@ while ``g(x)`` is not, using the proximal gradient method.
   - `prox!::Function`       : proximal operator of ``g(x)``
   - `style::AbstractString` : acceleration style
   - `β::Real`               : line search parameter
-  - `ϵ_abs::Real`           : absolute tolerance
-  - `ϵ_rel::Real`           : relative tolerance
+  - `ϵ::Real`               : tolerance
   - `max_iter::Integer`     : max number of iterations
 
 #### Returns
   - `x::AbstractVector` : minimizer (optimal parameter values) (n x 1)
 """
 function prox_grad(x0::AbstractVector, f::Function, ∇f!::Function, prox!::Function; 
-                    style::AbstractString="none", β::Real=.5, ϵ_abs::Real=1e-7, 
-                    ϵ_rel::Real=1e-3, max_iter::Integer=1000)
+                    style::AbstractString="none", β::Real=.5, ϵ::Real=1e-7, 
+                    max_iter::Integer=1000)
     # Initialize state and line search
-    state= ProxGradState(copy(x0), similar(x0), similar(x0), zero(x0), similar(x0))
-    ls= BackTrack(one(Float64), one(Float64), β)
-
-    # Initialize acceleration
-    if style == "none"
-        acc= NoAccel(zero(Float64))
-    elseif style == "simple"
-        acc= Simple(zero(Float64), one(Int64))
-    elseif style == "nesterov"
-        acc= Nesterov(ω= zero(Float64), θ= one(Float64), ls= ls)
-    end
-
-    # Initialize stopping flags
-    abs_change= Inf
-    rel_change= Inf
-    # Initialize iteration counter
-    iter= 1
-    # Proximal gradient method
-    while (abs_change > ϵ_abs && rel_change > ϵ_rel) && iter < max_iter
-        # Store current parameters
-        copyto!(state.x_prev, state.x)
-
-        # Extrapolation
-        update_acc!(acc, state)
-        state.y.= state.x .+ acc.ω .* state.Δ
-
-        # Current gradient
-        ∇f!(state.∇f, state.y)
-
-        # Backtracking linesearch
-        backtrack!(ls, state, f, prox!, ϵ=ϵ_abs)
-
-        # Store change in state
-        state.Δ.= state.x .- state.x_prev
-
-        # Absolute change
-        abs_change= maximum(abs, state.Δ)
-        # Relative change
-        rel_change= abs_change * inv(1 + maximum(abs, state.x))
-
-        # Update iteration counter
-        iter+=1
-    end
-    
-    return state.x 
-end
-
-"""
-    prox_grad!(x, f, ∇f!, prox!; style="none", β=.5, ϵ_abs=1e-7, ϵ_rel=1e-3, max_iter=1000)
-
-Minimize an objective function ``f(x) + g(x)``, where ``f(x)`` is differentibale
-while ``g(x)`` is not, using the proximal gradient method. Storing the result in
-`x`. See also `prox_grad`.
-"""
-function prox_grad!(x::AbstractVector, f::Function, ∇f!::Function, prox!::Function; 
-                    style::AbstractString="none", β::Real=.5, ϵ_abs::Real=1e-7, 
-                    ϵ_rel::Real=1e-3, max_iter::Integer=1000)
-    # Initialize state and line search
-    state= ProxGradState(x, similar(x), similar(x), zero(x), similar(x))
+    state= ProxGradState(copy(x0), copy(x0), similar(x0), similar(x0), similar(x0))
     ls= BackTrack(one(Float64), one(Float64), β)
 
     # Initialize acceleration
@@ -183,12 +124,14 @@ function prox_grad!(x::AbstractVector, f::Function, ∇f!::Function, prox!::Func
     end
 
     # Initialize stopping flag
-    abs_change= Inf
     rel_change= Inf
     # Initialize iteration counter
     iter= 1
     # Proximal gradient method
-    while (abs_change > ϵ_abs && rel_change > ϵ_rel) && iter < max_iter
+    while rel_change > ϵ && iter < max_iter
+        # Store change in state
+        state.Δ.= state.x .- state.x_prev
+
         # Store current parameters
         copyto!(state.x_prev, state.x)
 
@@ -200,15 +143,65 @@ function prox_grad!(x::AbstractVector, f::Function, ∇f!::Function, prox!::Func
         ∇f!(state.∇f, state.y)
 
         # Backtracking linesearch
-        backtrack!(ls, state, f, prox!, ϵ=ϵ_abs)
+        backtrack!(ls, state, f, prox!, ϵ=ϵ)
 
+        # Relative change
+        rel_change= norm(state.Δ, Inf) * inv(one(Float64) + norm(state.x, Inf))
+
+        # Update iteration counter
+        iter+=1
+    end
+    
+    return state.x 
+end
+
+"""
+    prox_grad!(x, f, ∇f!, prox!; style="none", β=.5, ϵ=1e-7, max_iter=1000)
+
+Minimize an objective function ``f(x) + g(x)``, where ``f(x)`` is differentibale
+while ``g(x)`` is not, using the proximal gradient method. Storing the result in
+`x`. See also `prox_grad`.
+"""
+function prox_grad!(x::AbstractVector, f::Function, ∇f!::Function, prox!::Function; 
+                    style::AbstractString="none", β::Real=.5, ϵ::Real=1e-7, 
+                    max_iter::Integer=1000)
+    # Initialize state and line search
+    state= ProxGradState(x, copy(x), similar(x), similar(x), similar(x))
+    ls= BackTrack(one(Float64), one(Float64), β)
+
+    # Initialize acceleration
+    if style == "none"
+        acc= NoAccel(zero(Float64))
+    elseif style == "simple"
+        acc= Simple(zero(Float64), one(Int64))
+    elseif style == "nesterov"
+        acc= Nesterov(ω= zero(Float64), θ= one(Float64), ls= ls)
+    end
+
+    # Initialize stopping flag
+    rel_change= Inf
+    # Initialize iteration counter
+    iter= 1
+    # Proximal gradient method
+    while rel_change > ϵ && iter < max_iter
         # Store change in state
         state.Δ.= state.x .- state.x_prev
 
-        # Absolute change
-        abs_change= maximum(abs, state.Δ)
+        # Store current parameters
+        copyto!(state.x_prev, state.x)
+
+        # Extrapolation
+        update_acc!(acc, state)
+        state.y.= state.x .+ acc.ω .* state.Δ
+
+        # Current gradient
+        ∇f!(state.∇f, state.y)
+
+        # Backtracking linesearch
+        backtrack!(ls, state, f, prox!, ϵ=ϵ)
+
         # Relative change
-        rel_change= abs_change * inv(1 + maximum(abs, state.x))
+        rel_change= norm(state.Δ, Inf) * inv(one(Float64) + norm(state.x, Inf))
 
         # Update iteration counter
         iter+=1
