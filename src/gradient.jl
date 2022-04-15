@@ -123,12 +123,12 @@ function prox_grad(x0::AbstractVector, f::Function, ∇f!::Function, prox!::Func
         acc= Nesterov(ω= zero(Float64), θ= one(Float64), ls= ls)
     end
 
-    # Initialize stopping flag
-    rel_change= Inf
+    # Initialize gradient change
+    change= Inf
     # Initialize iteration counter
     iter= 1
     # Proximal gradient method
-    while rel_change > ϵ && iter < max_iter
+    while change > ϵ && iter < max_iter
         # Store change in state
         state.Δ.= state.x .- state.x_prev
 
@@ -145,8 +145,8 @@ function prox_grad(x0::AbstractVector, f::Function, ∇f!::Function, prox!::Func
         # Backtracking linesearch
         backtrack!(ls, state, f, prox!, ϵ=ϵ)
 
-        # Relative change
-        rel_change= norm(state.Δ, Inf) * inv(one(Float64) + norm(state.x, Inf))
+        # gradient change
+        change= norm(state.∇f)
 
         # Update iteration counter
         iter+=1
@@ -178,12 +178,12 @@ function prox_grad!(x::AbstractVector, f::Function, ∇f!::Function, prox!::Func
         acc= Nesterov(ω= zero(Float64), θ= one(Float64), ls= ls)
     end
 
-    # Initialize stopping flag
-    rel_change= Inf
+    # Initialize gradient change
+    change= Inf
     # Initialize iteration counter
     iter= 1
     # Proximal gradient method
-    while rel_change > ϵ && iter < max_iter
+    while change > ϵ && iter < max_iter
         # Store change in state
         state.Δ.= state.x .- state.x_prev
 
@@ -200,8 +200,8 @@ function prox_grad!(x::AbstractVector, f::Function, ∇f!::Function, prox!::Func
         # Backtracking linesearch
         backtrack!(ls, state, f, prox!, ϵ=ϵ)
 
-        # Relative change
-        rel_change= norm(state.Δ, Inf) * inv(one(Float64) + norm(state.x, Inf))
+        # gradient change
+        change= norm(state.∇f, Inf)
 
         # Update iteration counter
         iter+=1
