@@ -23,7 +23,13 @@ Update states using proximal updates with scale `λ` and relaxation determined b
   - `prox_f!::Function` : proximal operator of ``f(x)``
   - `prox_g!::Function` : proximal operator of ``g(x)``
 """
-function update_state!(state::ADMMState, λ::Real, α::Real, prox_f!::Function, prox_g!::Function)
+function update_state!(
+    state::ADMMState, 
+    λ::Real, 
+    α::Real, 
+    prox_f!::Function, 
+    prox_g!::Function
+)
     # Proximal update x
     state.x.= state.z .- state.u
     prox_f!(state.x, λ)
@@ -67,14 +73,28 @@ and ``α > 1`` over-relaxation.
   - `x::AbstractVector` : minimizer ``∈ dom f`` (n x 1)
   - `z::AbstractVector` : minimizer ``∈ dom g`` (n x 1)
 """
-function admm(x0::AbstractVector, prox_f!::Function, prox_g!::Function; 
-                λ::Real=1., α::Real=1., ϵ_abs::Real=1e-7, ϵ_rel::Real=1e-4, 
-                max_iter::Integer=1000)
+function admm(
+    x0::AbstractVector, 
+    prox_f!::Function, 
+    prox_g!::Function; 
+    λ::Real=1., 
+    α::Real=1., 
+    ϵ_abs::Real=1e-7, 
+    ϵ_rel::Real=1e-4, 
+    max_iter::Integer=1000
+)
     # Dimensions
     n= length(x0)
     
     # Initialize state
-    state= ADMMState(similar(x0), copy(x0), zero(x0), similar(x0), similar(x0), similar(x0))
+    state= ADMMState(
+        similar(x0), 
+        copy(x0), 
+        zero(x0), 
+        similar(x0), 
+        similar(x0), 
+        similar(x0)
+    )
 
     # Initialize stopping parameters
     iter= 1
@@ -96,8 +116,8 @@ function admm(x0::AbstractVector, prox_f!::Function, prox_g!::Function;
         ℓ₂_dual= norm(state.s)
 
         # Tolerance
-        ϵ_pri= sqrt(n)*ϵ_abs + ϵ_rel*max(norm(state.x), norm(state.z))
-        ϵ_dual= sqrt(n)*ϵ_abs + ϵ_rel*norm(state.u)
+        ϵ_pri= √n * ϵ_abs + ϵ_rel * max(norm(state.x), norm(state.z))
+        ϵ_dual= √n * ϵ_abs + ϵ_rel * norm(state.u)
 
         # Update iteration counter
         iter+=1
@@ -113,9 +133,16 @@ Minimize an objective function ``f(x) + g(x)``, where ``f(x)`` and ``g(x)`` can
 both be nonsmooth, using alternating direction method of multipliers, also known
 as Douglas-Rachford splitting, overwriting `x`. See also `admm`.
 """
-function admm!(x::AbstractVector, prox_f!::Function, prox_g!::Function; 
-                λ::Real=1., α::Real=1., ϵ_abs::Real=1e-7, ϵ_rel::Real=1e-4, 
-                max_iter::Integer=1000)
+function admm!(
+    x::AbstractVector, 
+    prox_f!::Function, 
+    prox_g!::Function; 
+    λ::Real=1., 
+    α::Real=1., 
+    ϵ_abs::Real=1e-7, 
+    ϵ_rel::Real=1e-4, 
+    max_iter::Integer=1000
+)
     # Dimensions
     n= length(x)
     
@@ -142,8 +169,8 @@ function admm!(x::AbstractVector, prox_f!::Function, prox_g!::Function;
         ℓ₂_dual= norm(state.s)
 
         # Tolerance
-        ϵ_pri= sqrt(n)*ϵ_abs + ϵ_rel*max(norm(state.x), norm(state.z))
-        ϵ_dual= sqrt(n)*ϵ_abs + ϵ_rel*norm(state.u)
+        ϵ_pri= √n * ϵ_abs + ϵ_rel * max(norm(state.x), norm(state.z))
+        ϵ_dual= √n * ϵ_abs + ϵ_rel * norm(state.u)
 
         # Update iteration counter
         iter+=1

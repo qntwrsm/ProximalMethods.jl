@@ -51,8 +51,8 @@ end
 # Nesterov momentum
 Base.@kwdef mutable struct Nesterov{Tf, G} <: AbstractAccelScheme
 	ω::Tf		# extrapolation parameter
-	θ::Tf		# momentum parameter
-	m::Tf = .0	# convexity parameter
+	θ::Tf       # momentum parameter
+	m::Tf=.0	# convexity parameter
 	ls::G		# line search parameters
 end
 
@@ -67,13 +67,14 @@ end
 
 # ADMM
 struct ADMMState{Tv}
-	x::Tv		# current state
-	z::Tv		# current state
-	u::Tv		# current
-	z_prev::Tv	# previous state
+	x::Tv		# current state primal variable
+	z::Tv		# current state primal variable
+	u::Tv		# current scaled dual variable
+	z_prev::Tv	# previous state primal variable
 	r::Tv		# primal residuals
 	s::Tv		# dual residuals
 end
+
 
 # Include programs
 include("proximal.jl")

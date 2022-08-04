@@ -42,8 +42,13 @@ Backtracking line search to find the optimal step size `λ`.
   - `prox!::Function`       : proximal operator of ``g(x)``
   - `ϵ::Real`               : tolerance
 """
-function backtrack!(ls::BackTrack, state::ProxGradState, f::Function, 
-                    prox!::Function; ϵ::Real=1e-7)
+function backtrack!(
+    ls::BackTrack, 
+    state::ProxGradState, 
+    f::Function, 
+    prox!::Function; 
+    ϵ::Real=1e-7
+)
     # Store previous stepsize
     ls.λ_prev= ls.λ
     
@@ -61,7 +66,7 @@ function backtrack!(ls::BackTrack, state::ProxGradState, f::Function,
 
     # f̂
     state.Δ.= state.x .- state.y
-    f_hat= f_y + dot(state.∇f, state.Δ) + inv(ls.λ+ls.λ)*norm(state.Δ)^2
+    f_hat= f_y + dot(state.∇f, state.Δ) + inv(ls.λ+ls.λ) * norm(state.Δ)^2
 
     # tolerance
     tol= 10 * eps(f_x) * (one(f_x) + abs(f_x))
@@ -79,7 +84,7 @@ function backtrack!(ls::BackTrack, state::ProxGradState, f::Function,
 
         # Update f̂
         state.Δ.= state.x .- state.y
-        f_hat= f_y + dot(state.∇f, state.Δ) + inv(ls.λ+ls.λ)*norm(state.Δ)^2
+        f_hat= f_y + dot(state.∇f, state.Δ) + inv(ls.λ+ls.λ) * norm(state.Δ)^2
 
         # Update tolerance
         tol= 10 * eps(f_x) * (one(f_x) + abs(f_x))
@@ -107,9 +112,16 @@ while ``g(x)`` is not, using the proximal gradient method.
 #### Returns
   - `x::AbstractVector` : minimizer (optimal parameter values) (n x 1)
 """
-function prox_grad(x0::AbstractVector, f::Function, ∇f!::Function, prox!::Function; 
-                    style::AbstractString="none", β::Real=.5, ϵ::Real=1e-7, 
-                    max_iter::Integer=1000)
+function prox_grad(
+    x0::AbstractVector, 
+    f::Function, 
+    ∇f!::Function, 
+    prox!::Function; 
+    style::AbstractString="none", 
+    β::Real=.5, 
+    ϵ::Real=1e-7, 
+    max_iter::Integer=1000
+)
     # Initialize state and line search
     state= ProxGradState(copy(x0), copy(x0), similar(x0), similar(x0), similar(x0))
     ls= BackTrack(one(Float64), one(Float64), β)
@@ -162,9 +174,16 @@ Minimize an objective function ``f(x) + g(x)``, where ``f(x)`` is differentibale
 while ``g(x)`` is not, using the proximal gradient method. Storing the result in
 `x`. See also `prox_grad`.
 """
-function prox_grad!(x::AbstractVector, f::Function, ∇f!::Function, prox!::Function; 
-                    style::AbstractString="none", β::Real=.5, ϵ::Real=1e-7, 
-                    max_iter::Integer=1000)
+function prox_grad!(
+    x::AbstractVector, 
+    f::Function, 
+    ∇f!::Function, 
+    prox!::Function; 
+    style::AbstractString="none", 
+    β::Real=.5, 
+    ϵ::Real=1e-7, 
+    max_iter::Integer=1000
+)
     # Initialize state and line search
     state= ProxGradState(x, copy(x), similar(x), similar(x), similar(x))
     ls= BackTrack(one(Float64), one(Float64), β)
