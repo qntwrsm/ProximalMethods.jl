@@ -18,7 +18,7 @@ using   LinearAlgebra,
 
 export 
 # Proximal Operators
-	soft_thresh, soft_thtresh!,
+	soft_thresh,
 	block_soft_thresh, block_soft_thresh!,
 	shrinkage, shrinkage!,
     smooth, smooth!,
