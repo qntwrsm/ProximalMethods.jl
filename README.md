@@ -41,6 +41,7 @@ Two flavours of this acceleration are implemented
 
 - `Simple`: simple extrapolation, i.e. $\omega^{k} = \frac{k - 1}{k + 2}$ for every iteration $k$.
 - `Nesterov`: Nesterov momentum extrapolation, i.e. $\omega^{k} = \frac{\lambda^{k}\theta^{k-1}(1 - \theta^{k-1})}{\lambda^{k-1}\theta^{k} + \lambda^{k}(\theta^{k-1})^{2}}$ where $\theta^{k}$ is the positive root of the quadratic equation
+
   $$
   \frac{(\theta^{k})^{2}}{\lambda^{k}} = (1 - \theta^{k})\frac{(\theta^{k-1})^{2}}{\lambda^{k-1}} + m\theta^{k}
   $$
