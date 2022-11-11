@@ -6,6 +6,7 @@ The proximal operator for a variety of commonly used functions in optimization, 
 
 ```@docs
 soft_thresh
+soft_thresh!
 ```
 
 ## $\ell_{2}$-norm
@@ -25,5 +26,6 @@ shrinkage!
 ## Smooth function
 
 ```@docs
+smooth
 smooth!
 ```

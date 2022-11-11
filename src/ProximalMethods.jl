@@ -18,10 +18,10 @@ using   LinearAlgebra,
 
 export 
 # Proximal Operators
-	soft_thresh,
+	soft_thresh, soft_thtresh!,
 	block_soft_thresh, block_soft_thresh!,
 	shrinkage, shrinkage!,
-    smooth!,
+    smooth, smooth!,
 # Proximal Gradient Methods
 	prox_grad, prox_grad!, 
 # ADMM
