@@ -31,8 +31,10 @@ Alternating direction method of multipliers (ADMM), also known as Douglas-Rachfo
 For the proximal gradient method there exist so-called accelerated versions, which implies the following update step at iteration $k$
 
 $$
-y^{k+1} & = x^{k} + \omega^{k}(x^{k} - x^{k-1}) \\
-x^{k+1} & = \text{prox}_{\lambda^{k} g}(y^{k+1} - \lambda^{k} \nabla f(y^{k+1}))
+\begin{aligned}
+    y^{k+1} & = x^{k} + \omega^{k}(x^{k} - x^{k-1}) \\
+    x^{k+1} & = \text{prox}_{\lambda^{k} g}(y^{k+1} - \lambda^{k} \nabla f(y^{k+1}))
+\end{aligned}
 $$
 
 Two flavours of this acceleration are implemented
