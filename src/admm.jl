@@ -108,7 +108,7 @@ function admm(
         update_state!(state, λ, α, prox_f!, prox_g!)
 
         # Primal residual
-        state.r.= state.x .+ state.z
+        state.r.= state.x .- state.z
         ℓ₂_pri= norm(state.r)
 
         # Dual residual
@@ -161,7 +161,7 @@ function admm!(
         update_state!(state, λ, α, prox_f!, prox_g!)
 
         # Primal residual
-        state.r.= state.x .+ state.z
+        state.r.= state.x .- state.z
         ℓ₂_pri= norm(state.r)
 
         # Dual residual
