@@ -103,7 +103,7 @@ function admm(
     ϵ_pri= zero(ϵ_abs)
     ϵ_dual= zero(ϵ_abs)
     # ADMM
-    while ℓ₂_pri > ϵ_pri && ℓ₂_dual > ϵ_dual && iter < max_iter
+    while (ℓ₂_pri > ϵ_pri || ℓ₂_dual) > ϵ_dual && iter < max_iter
         # Update states
         update_state!(state, λ, α, prox_f!, prox_g!)
 
@@ -156,7 +156,7 @@ function admm!(
     ϵ_pri= zero(ϵ_abs)
     ϵ_dual= zero(ϵ_abs)
     # ADMM
-    while ℓ₂_pri > ϵ_pri && ℓ₂_dual > ϵ_dual && iter < max_iter
+    while (ℓ₂_pri > ϵ_pri || ℓ₂_dual) > ϵ_dual && iter < max_iter
         # Update states
         update_state!(state, λ, α, prox_f!, prox_g!)
 
