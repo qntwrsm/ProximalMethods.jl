@@ -152,7 +152,7 @@ function shrinkage(
     fac::Factorization, 
     b::AbstractVector
 )
-    y= similar(x)
+    y= copy(x)
     shrinkage!(y, λ, fac, b)
 
     return y
@@ -207,7 +207,7 @@ function shrinkage(
     A::AbstractMatrix, 
     b::AbstractVector
 )
-    y= similar(x)
+    y= copy(x)
     shrinkage!(y, λ, A, b)
 
     return y
