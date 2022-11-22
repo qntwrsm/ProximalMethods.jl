@@ -48,7 +48,7 @@ Two flavours of this acceleration are implemented
 
 # Documentation
 
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://qntwrsm.github.io/ProximalMethods.jl/stable)
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://qntwrsm.github.io/ProximalMethods.jl/stable)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://qntwrsm.github.io/ProximalMethods.jl/dev)
 
 # Installation
