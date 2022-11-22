@@ -56,7 +56,7 @@ Two flavours of this acceleration are implemented
 To install, in the Julia REPL:
 
 ```julia
-using Pkg; Pkg.add("ControlSystems")
+using Pkg; Pkg.add("ProximalMethods")
 ```
 
 [![Build Status](https://github.com/qntwrsm/ProximalMethods.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/qntwrsm/ProximalMethods.jl/actions/workflows/CI.yml?query=branch%3Amain)
