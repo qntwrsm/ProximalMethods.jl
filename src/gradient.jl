@@ -94,7 +94,7 @@ function backtrack!(
 end
 
 """
-    prox_grad(x0, f, ∇f!, prox!; style="none", β=.5, ϵ=1e-7, max_iter=1000)
+    prox_grad(x0, f, ∇f!, prox!; style=:noaccel, β=.5, ϵ=1e-7, max_iter=1000)
 
 Minimize an objective function ``f(x) + g(x)``, where ``f(x)`` is differentibale
 while ``g(x)`` is not, using the proximal gradient method.
@@ -104,7 +104,7 @@ while ``g(x)`` is not, using the proximal gradient method.
   - `f::Function`           : ``f(x)``
   - `∇f!::Function`         : gradient of `f`
   - `prox!::Function`       : proximal operator of ``g(x)``
-  - `style::AbstractString` : acceleration style
+  - `style::Symbol`         : acceleration style
   - `β::Real`               : line search parameter
   - `ϵ::Real`               : tolerance
   - `max_iter::Integer`     : max number of iterations
@@ -117,7 +117,7 @@ function prox_grad(
     f::Function, 
     ∇f!::Function, 
     prox!::Function; 
-    style::AbstractString="none", 
+    style::Symbol=:noaccel, 
     β::Real=.5, 
     ϵ::Real=1e-7, 
     max_iter::Integer=1000
@@ -127,11 +127,11 @@ function prox_grad(
     ls= BackTrack(one(Float64), one(Float64), β)
 
     # Initialize acceleration
-    if style == "none"
+    if style == :noaccel
         acc= NoAccel(zero(Float64))
-    elseif style == "simple"
+    elseif style == :simple
         acc= Simple(zero(Float64), one(Int64))
-    elseif style == "nesterov"
+    elseif style == :nesterov
         acc= Nesterov(ω= zero(Float64), θ= one(Float64), ls= ls)
     end
 
@@ -168,7 +168,7 @@ function prox_grad(
 end
 
 """
-    prox_grad!(x, f, ∇f!, prox!; style="none", β=.5, ϵ=1e-7, max_iter=1000)
+    prox_grad!(x, f, ∇f!, prox!; style=:noaccel, β=.5, ϵ=1e-7, max_iter=1000)
 
 Minimize an objective function ``f(x) + g(x)``, where ``f(x)`` is differentibale
 while ``g(x)`` is not, using the proximal gradient method. Storing the result in
@@ -179,7 +179,7 @@ function prox_grad!(
     f::Function, 
     ∇f!::Function, 
     prox!::Function; 
-    style::AbstractString="none", 
+    style::Symbol=:noaccel, 
     β::Real=.5, 
     ϵ::Real=1e-7, 
     max_iter::Integer=1000
@@ -189,11 +189,11 @@ function prox_grad!(
     ls= BackTrack(one(Float64), one(Float64), β)
 
     # Initialize acceleration
-    if style == "none"
+    if style == :noaccel
         acc= NoAccel(zero(Float64))
-    elseif style == "simple"
+    elseif style == :simple
         acc= Simple(zero(Float64), one(Int64))
-    elseif style == "nesterov"
+    elseif style == :nesterov
         acc= Nesterov(ω= zero(Float64), θ= one(Float64), ls= ls)
     end
 
