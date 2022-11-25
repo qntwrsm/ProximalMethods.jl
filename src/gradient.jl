@@ -30,7 +30,7 @@ function update_state!(state::ProxGradState, λ::Real, prox!::Function)
 end
 
 """
-    backtrack!(ls, state, f, prox!; ϵ=1e-7)
+    backtrack!(ls, state, f, prox!; λ_min=1e-7)
 
 Backtracking line search to find the optimal step size `λ`.
 
@@ -40,23 +40,20 @@ Backtracking line search to find the optimal step size `λ`.
   - `λ::Real`               : initial stepsize
   - `f::Function`           : objective function
   - `prox!::Function`       : proximal operator of ``g(x)``
-  - `ϵ::Real`               : tolerance
+  - `λ_min::Real`           : minimum stepsize
 """
 function backtrack!(
     ls::BackTrack, 
     state::ProxGradState, 
     f::Function, 
     prox!::Function; 
-    ϵ::Real=1e-7
+    λ_min::Real=1e-7
 )
     # Store previous stepsize
     ls.λ_prev= ls.λ
     
     # Objective function value, f(y)
     f_y= f(state.y)
-
-    # Minimal stepsize
-    λ_min= ϵ * maximum(abs, state.∇f)
 
     # Update state
     update_state!(state, ls.λ, prox!)
@@ -72,7 +69,7 @@ function backtrack!(
     tol= 10 * eps(f_x) * (one(f_x) + abs(f_x))
 
     # Backtracking line search
-    while f_x > f_hat + tol && ls.λ > λ_min
+    while f_x > f_hat + tol && ls.λ > λ_min * inv(ls.β)
         # Update stepsize
         ls.λ*= ls.β
 
@@ -155,7 +152,7 @@ function prox_grad(
         ∇f!(state.∇f, state.y)
 
         # Backtracking linesearch
-        backtrack!(ls, state, f, prox!, ϵ=ϵ)
+        backtrack!(ls, state, f, prox!)
 
         # gradient change
         change= norm(state.∇f)
@@ -217,7 +214,7 @@ function prox_grad!(
         ∇f!(state.∇f, state.y)
 
         # Backtracking linesearch
-        backtrack!(ls, state, f, prox!, ϵ=ϵ)
+        backtrack!(ls, state, f, prox!)
 
         # gradient change
         change= norm(state.∇f, Inf)
