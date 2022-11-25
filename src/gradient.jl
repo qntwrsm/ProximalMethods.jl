@@ -120,7 +120,7 @@ function prox_grad(
     max_iter::Integer=1000
 )
     # Initialize state and line search
-    state= ProxGradState(copy(x0), copy(x0), similar(x0), similar(x0), similar(x0))
+    state= ProxGradState(copy(x0), copy(x0), similar(x0), zero(x0), similar(x0))
     ls= BackTrack(one(Float64), one(Float64), β)
 
     # Initialize acceleration
@@ -138,9 +138,6 @@ function prox_grad(
     iter= 1
     # Proximal gradient method
     while change > ϵ && iter < max_iter
-        # Store change in state
-        state.Δ.= state.x .- state.x_prev
-
         # Store current parameters
         copyto!(state.x_prev, state.x)
 
@@ -154,8 +151,9 @@ function prox_grad(
         # Backtracking linesearch
         backtrack!(ls, state, f, prox!)
 
-        # gradient change
-        change= norm(state.∇f)
+        # change
+        state.Δ.= state.x .- state.x_prev
+        change= norm(state.Δ)
 
         # Update iteration counter
         iter+=1
@@ -182,7 +180,7 @@ function prox_grad!(
     max_iter::Integer=1000
 )
     # Initialize state and line search
-    state= ProxGradState(x, copy(x), similar(x), similar(x), similar(x))
+    state= ProxGradState(x, copy(x), similar(x), zero(x), similar(x))
     ls= BackTrack(one(Float64), one(Float64), β)
 
     # Initialize acceleration
@@ -200,9 +198,6 @@ function prox_grad!(
     iter= 1
     # Proximal gradient method
     while change > ϵ && iter < max_iter
-        # Store change in state
-        state.Δ.= state.x .- state.x_prev
-
         # Store current parameters
         copyto!(state.x_prev, state.x)
 
@@ -216,8 +211,9 @@ function prox_grad!(
         # Backtracking linesearch
         backtrack!(ls, state, f, prox!)
 
-        # gradient change
-        change= norm(state.∇f, Inf)
+        # change
+        state.Δ.= state.x .- state.x_prev
+        change= norm(state.Δ)
 
         # Update iteration counter
         iter+=1
