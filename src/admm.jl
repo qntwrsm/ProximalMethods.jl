@@ -112,7 +112,7 @@ function admm(
         ℓ₂_pri= norm(state.r)
 
         # Dual residual
-        state.s.= -λ .* (state.z .- state.z_prev)
+        state.s.= -inv(λ) .* (state.z .- state.z_prev)
         ℓ₂_dual= norm(state.s)
 
         # Tolerance
@@ -165,7 +165,7 @@ function admm!(
         ℓ₂_pri= norm(state.r)
 
         # Dual residual
-        state.s.= -λ .* (state.z .- state.z_prev)
+        state.s.= -inv(λ) .* (state.z .- state.z_prev)
         ℓ₂_dual= norm(state.s)
 
         # Tolerance
