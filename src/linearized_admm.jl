@@ -31,7 +31,7 @@ denotes under-relaxation and ``α > 1`` over-relaxation.
   - `x0::AbstractVector`: initial parameter values (n x 1)
   - `prox_f!::Function` : proximal operator of ``f(x)``
   - `prox_g!::Function` : proximal operator of ``g(x)``
-  - `A::AbstractMatrix` : matrix transformation of ``g(x)``
+  - `A::AbstractMatrix` : matrix transformation of ``g(x)`` (p x n)
   - `λ::Real`           : proximal scaling parameter of ``g(x)``
   - `μ::Real`           : proximal scaling parameter of ``f(x)``
   - `α::Real`           : relaxation parameter
@@ -41,7 +41,7 @@ denotes under-relaxation and ``α > 1`` over-relaxation.
   
 #### Returns
   - `x::AbstractVector` : minimizer ``∈ dom f`` (n x 1)
-  - `z::AbstractVector` : minimizer ``∈ dom g`` (n x 1)
+  - `z::AbstractVector` : minimizer ``∈ dom g`` (p x 1)
 """
 function ladmm(
     x0::AbstractVector, 
@@ -59,14 +59,15 @@ function ladmm(
     (p, n) = size(A) 
     
     # Initialize state
+    z0 = A * x0
     state = lADMMState(
         similar(x0), 
-        copy(x0), 
-        zero(x0), 
-        similar(x0), 
-        similar(x0), 
+        z0, 
+        zero(z0), 
+        similar(z0), 
+        similar(z0), 
+        similar(z0),
         similar(x0),
-        similar(x0, p),
         similar(x0)
     )
 
@@ -87,8 +88,8 @@ function ladmm(
         ℓ₂_pri = norm(state.r)
 
         # Dual residual
-        mul!(state.s, A, state.z, -inv(λ), zero(λ))
-        mul!(state.s, A, state.z_prev, inv(λ), one(λ))
+        mul!(state.s, transpose(A), state.z, -inv(λ), zero(λ))
+        mul!(state.s, transpose(A), state.z_prev, inv(λ), one(λ))
         ℓ₂_dual = norm(state.s)
 
         # Tolerance
