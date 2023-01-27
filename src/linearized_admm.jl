@@ -118,11 +118,11 @@ function ladmm(
         zero(z0),
         similar(z0), 
         similar(z0), 
-        similar(z0),
+        similar(x0),
         z0,
         Atz0,
         Atz0,
-        similar(x0)
+        zero(x0)
     )
 
     # Initialize stopping parameters
