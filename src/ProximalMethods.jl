@@ -86,6 +86,8 @@ struct lADMMState{Tv}
 	r::Tv		# primal residuals
 	s::Tv		# dual residuals
     Ax::Tv		# primal variable restrictions
+    Atz::Tv     # transformed primal variable
+    AtAx::Tv    # linearized term
     Atu::Tv		# transformed scaled dual variable
 end
 

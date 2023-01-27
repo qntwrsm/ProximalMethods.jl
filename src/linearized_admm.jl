@@ -14,6 +14,57 @@ linearized_admm.jl
 =#
 
 """
+    update_state!(state, A, μ, λ, α, prox_f!, prox_g!)
+
+Update states using proximal updates with scale `μ` and `λ` and relaxation
+determined by `α`, storing the result in `x`, `z`, and `u`.
+
+#### Arguments
+  - `state::lADMMState` : state variables
+  - `A::AbstractMatrix` : matrix transformation of ``g(x)`` (p x n)
+  - `μ::Real`           : proximal scaling parameter of ``f(x)``
+  - `λ::Real`           : proximal scaling parameter of ``g(x)``
+  - `α::Real`           : relaxation parameter
+  - `prox_f!::Function` : proximal operator of ``f(x)``
+  - `prox_g!::Function` : proximal operator of ``g(x)``
+"""
+function update_state!(
+    state::lADMMState, 
+    A::AbstractMatrix,
+    μ::Real,
+    λ::Real, 
+    α::Real, 
+    prox_f!::Function, 
+    prox_g!::Function
+)
+    # Proximal update x
+    state.x .-= μ .* inv(λ) .* (state.AtAx .- state.Atz .+ state.Atu)
+    prox_f!(state.x, μ)
+
+    # update Ax and A'Ax
+    mul!(state.Ax, A, state.x)
+    mul!(state.AtAx, transpose(A), state.Ax)
+
+    # Store previous z
+    copyto!(state.z_prev, state.z)
+
+    # Proximal update z
+    state.z .= α .* state.Ax .+ (one(α) - α) .* state.z_prev .+ state.u
+    prox_g!(state.z, λ)
+
+    # update A'z
+    mul!(state.Atz, transpose(A), state.z)
+
+    # Update u
+    state.u .+= .+ α .* state.Ax .+ (one(α) - α) .* state.z_prev .- state.z
+
+    # update A'u
+    mul!(state.Atu, transpose(A), state.u)
+
+     return nothing
+end
+
+"""
     ladmm(x0, prox_f!, prox_g!, A; λ=1., μ=λ*inv(norm(A)), α=1., ϵ_abs=1e-7, ϵ_rel=1e-4, max_iter=1000)
 
 Minimize an objective function ``f(x) + g(Ax)``, where ``f(x)`` and ``g(Ax)``
@@ -60,14 +111,17 @@ function ladmm(
     
     # Initialize state
     z0 = A * x0
+    Atz0 = transpose(A) * z0
     state = lADMMState(
         similar(x0), 
         z0, 
-        zero(z0), 
+        zero(z0),
         similar(z0), 
         similar(z0), 
         similar(z0),
-        similar(x0),
+        z0,
+        Atz0,
+        Atz0,
         similar(x0)
     )
 
@@ -83,18 +137,16 @@ function ladmm(
         update_state!(state, A, μ, λ, α, prox_f!, prox_g!)
 
         # Primal residual
-        mul!(state.Ax, A, state.x)
         state.r .= state.Ax .- state.z
         ℓ₂_pri = norm(state.r)
 
         # Dual residual
-        mul!(state.s, transpose(A), state.z, -inv(λ), zero(λ))
-        mul!(state.s, transpose(A), state.z_prev, inv(λ), one(λ))
+        mul!(state.s, transpose(A), state.z_prev, inv(λ), zero(λ))
+        state.s .-= inv(λ) .* state.Atz
         ℓ₂_dual = norm(state.s)
 
         # Tolerance
         ϵ_pri = √p * ϵ_abs + ϵ_rel * max(norm(state.Ax), norm(state.z))
-        mul!(state.Atu, transpose(A), state.u)
         ϵ_dual = √n * ϵ_abs + ϵ_rel * norm(inv(λ) .* state.Atu)
 
         # Update iteration counter
