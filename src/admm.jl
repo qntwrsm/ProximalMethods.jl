@@ -117,7 +117,7 @@ function admm(
 
         # Tolerance
         ϵ_pri= √n * ϵ_abs + ϵ_rel * max(norm(state.x), norm(state.z))
-        ϵ_dual= √n * ϵ_abs + ϵ_rel * norm(λ .* state.u)
+        ϵ_dual= √n * ϵ_abs + ϵ_rel * norm(inv(λ) .* state.u)
 
         # Update iteration counter
         iter+=1
@@ -170,7 +170,7 @@ function admm!(
 
         # Tolerance
         ϵ_pri= √n * ϵ_abs + ϵ_rel * max(norm(state.x), norm(state.z))
-        ϵ_dual= √n * ϵ_abs + ϵ_rel * norm(λ .* state.u)
+        ϵ_dual= √n * ϵ_abs + ϵ_rel * norm(inv(λ) .* state.u)
 
         # Update iteration counter
         iter+=1
