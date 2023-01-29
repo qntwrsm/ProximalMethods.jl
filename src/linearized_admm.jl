@@ -61,7 +61,7 @@ function update_state!(
     # update A'u
     mul!(state.Atu, transpose(A), state.u)
 
-     return nothing
+    return nothing
 end
 
 """
@@ -100,28 +100,28 @@ function ladmm(
     prox_g!::Function,
     A::AbstractMatrix;
     λ::Real=1., 
-    μ::Real=λ*inv(norm(A)^2),
+    μ::Real=λ*inv(opnorm(A)^2),
     α::Real=1., 
     ϵ_abs::Real=1e-7, 
     ϵ_rel::Real=1e-4, 
     max_iter::Integer=1000
 )
     # Dimensions
-    (p, n) = size(A) 
+    (p, n) = size(A)
     
     # Initialize state
     z0 = A * x0
     Atz0 = transpose(A) * z0
     state = lADMMState(
-        similar(x0), 
+        copy(x0), 
         z0, 
         zero(z0),
         similar(z0), 
         similar(z0), 
         similar(x0),
-        z0,
+        copy(z0),
         Atz0,
-        Atz0,
+        copy(Atz0),
         zero(x0)
     )
 
