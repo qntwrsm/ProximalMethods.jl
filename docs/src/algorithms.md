@@ -15,3 +15,10 @@ prox_grad!
 admm
 admm!
 ```
+
+## Linearized ADMM
+
+```@docs
+ladmm
+ladmm!
+```
