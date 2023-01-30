@@ -25,7 +25,9 @@ export
 # Proximal Gradient Methods
 	prox_grad, prox_grad!, 
 # ADMM
-	admm, admm!
+	admm, admm!,
+# linearized ADMM
+    ladmm, ladmm!
 
 # Types
 abstract type AbstractAccelScheme end
@@ -75,11 +77,26 @@ struct ADMMState{Tv}
 	s::Tv		# dual residuals
 end
 
+# linearized ADMM
+struct lADMMState{Tv}
+	x::Tv		# current state primal variable
+	z::Tv		# current state primal variable
+	u::Tv		# current scaled dual variable
+	z_prev::Tv	# previous state primal variable
+	r::Tv		# primal residuals
+	s::Tv		# dual residuals
+    Ax::Tv		# primal variable restrictions
+    Atz::Tv     # transformed primal variable
+    AtAx::Tv    # linearized term
+    Atu::Tv		# transformed scaled dual variable
+end
+
 
 # Include programs
 include("proximal.jl")
 include("acceleration.jl")
 include("gradient.jl")
 include("admm.jl")
+include("linearized_admm.jl")
 
 end
