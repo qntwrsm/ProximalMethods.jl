@@ -155,3 +155,72 @@ function ladmm(
    
     return (state.x, state.z)
 end
+
+"""
+    ladmm!(x, prox_f!, prox_g!, A; λ=1., μ=λ*inv(norm(A)), α=1., ϵ_abs=1e-7, ϵ_rel=1e-4, max_iter=1000)
+
+Minimize an objective function ``f(x) + g(Ax)``, where ``f(x)`` and ``g(Ax)``
+can both be nonsmooth, using linearized alternating direction method of
+multipliers, overwriting `x`. See also `ladmm`.
+"""
+function ladmm!(
+    x::AbstractVector, 
+    prox_f!::Function, 
+    prox_g!::Function,
+    A::AbstractMatrix;
+    λ::Real=1., 
+    μ::Real=λ*inv(opnorm(A)^2),
+    α::Real=1., 
+    ϵ_abs::Real=1e-7, 
+    ϵ_rel::Real=1e-4, 
+    max_iter::Integer=1000
+)
+    # Dimensions
+    (p, n) = size(A)
+    
+    # Initialize state
+    z0 = A * x
+    Atz0 = transpose(A) * z0
+    state = lADMMState(
+        x, 
+        z0, 
+        zero(z0),
+        similar(z0), 
+        similar(z0), 
+        similar(x),
+        copy(z0),
+        Atz0,
+        copy(Atz0),
+        zero(x)
+    )
+
+    # Initialize stopping parameters
+    iter = 1
+    ℓ₂_pri = one(ϵ_abs)
+    ℓ₂_dual = one(ϵ_abs)
+    ϵ_pri = zero(ϵ_abs)
+    ϵ_dual = zero(ϵ_abs)
+    # ADMM
+    while (ℓ₂_pri > ϵ_pri || ℓ₂_dual > ϵ_dual) && iter < max_iter
+        # Update states
+        update_state!(state, A, μ, λ, α, prox_f!, prox_g!)
+
+        # Primal residual
+        state.r .= state.Ax .- state.z
+        ℓ₂_pri = norm(state.r)
+
+        # Dual residual
+        mul!(state.s, transpose(A), state.z_prev, inv(λ), zero(λ))
+        state.s .-= inv(λ) .* state.Atz
+        ℓ₂_dual = norm(state.s)
+
+        # Tolerance
+        ϵ_pri = √p * ϵ_abs + ϵ_rel * max(norm(state.Ax), norm(state.z))
+        ϵ_dual = √n * ϵ_abs + ϵ_rel * norm(inv(λ) .* state.Atu)
+
+        # Update iteration counter
+        iter += 1
+    end
+   
+    return state.z
+end
