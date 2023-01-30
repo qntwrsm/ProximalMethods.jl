@@ -27,7 +27,7 @@ export
 # ADMM
 	admm, admm!,
 # linearized ADMM
-    ladmm
+    ladmm, ladmm!
 
 # Types
 abstract type AbstractAccelScheme end
