@@ -26,6 +26,19 @@ where $f$ is differentiable and $g$ potentially non-smooth.
 
 Alternating direction method of multipliers (ADMM), also known as Douglas-Rachford splitting, can be used to optimize an objective function that can be split into two components, where both components can be non-smooth.
 
+Linearized ADMM can be used to solve problems of the form
+
+$$
+\min f(x) + g(Ax)
+$$
+
+where $f$ and $g$ are potentially non-smooth. It does so by linearizing the implied augmented Lagrangian function obtained for the problem
+
+$$
+\min f(x) + g(z) \\
+\text{s.t.} \; Ax - z = 0.
+$$
+
 # Acceleration
 
 For the proximal gradient method there exist so-called accelerated versions, which implies the following update step at iteration $k$
